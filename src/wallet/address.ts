@@ -17,12 +17,14 @@ import {
     LYRA_TEST_NETWORK,
     TESTNET_DERIVATION_PATH,
     TRON_DERIVATION_PATH,
-    VET_DERIVATION_PATH
+    VET_DERIVATION_PATH,
 } from '../constants';
 import {Currency} from '../model';
 import {generateAddress} from './tron.crypto';
+import {generateAdaKey} from '../utils';
 // tslint:disable-next-line:no-var-requires
 const TronWeb = require('tronweb');
+const cardanoCrypto = require('cardano-crypto.js');
 
 /**
  * Generate Bitcoin address
@@ -135,6 +137,17 @@ const generateLyraAddress = (testnet: boolean, xpub: string, i: number) => {
     const network = testnet ? LYRA_TEST_NETWORK : LYRA_NETWORK;
     const w = fromBase58(xpub, network).derivePath(String(i));
     return payments.p2pkh({pubkey: w.publicKey, network}).address as string;
+};
+
+/**
+ * Generate Carnado address
+ * @param xpub extended public key to generate address from
+ * @param i derivation index of address to generate. Up to 2^31 addresses can be generated.
+ * @returns blockchain address
+ */
+const generateAdaAddress = (xpub: string, i: number) => {
+    const buf = Buffer.from(xpub, 'hex');
+    return cardanoCrypto.derivePublic(buf, i, 1).toString('hex');
 };
 
 /**
@@ -264,6 +277,14 @@ const generateLyraPrivateKey = async (testnet: boolean, mnemonic: string, i: num
 };
 
 /**
+ * Generate Cardano private key from mnemonic seed
+ * @param mnemonic mnemonic to generate private key from
+ * @returns blockchain private key to the address
+ */
+const generateAdaPrivateKey = async (mnemonic: string) => {
+    return generateAdaKey(mnemonic, true);
+};
+/**
  * Convert Bitcoin Private Key to Address
  * @param testnet testnet or mainnet version of address
  * @param privkey private key to use
@@ -349,6 +370,8 @@ export const generateAddressFromXPub = (currency: Currency, testnet: boolean, xp
             return generateVetAddress(testnet, xpub, i);
         case Currency.LYRA:
             return generateLyraAddress(testnet, xpub, i);
+        case Currency.ADA:
+            return generateAdaAddress(xpub, i);
         default:
             throw new Error('Unsupported blockchain.');
     }
@@ -405,6 +428,8 @@ export const generatePrivateKeyFromMnemonic = (currency: Currency, testnet: bool
             return generateVetPrivateKey(testnet, mnemonic, i);
         case Currency.LYRA:
             return generateLyraPrivateKey(testnet, mnemonic, i);
+        case Currency.ADA:
+            return generateAdaPrivateKey(mnemonic);
         default:
             throw new Error('Unsupported blockchain.');
     }

@@ -9,7 +9,6 @@ import hdkey from 'hdkey';
 import {RippleAPI} from 'ripple-lib';
 import {Keypair} from 'stellar-sdk';
 import {
-    HARDENED_THRESHOLD,
     BCH_DERIVATION_PATH,
     BTC_DERIVATION_PATH,
     CELO_DERIVATION_PATH,
@@ -23,13 +22,12 @@ import {
     TESTNET_DERIVATION_PATH,
     TRON_DERIVATION_PATH,
     VET_DERIVATION_PATH,
-    ADA_DERIVATION_PATH,
 } from '../constants';
 import {Currency} from '../model';
+import { generateAdaKey } from '../utils'
 // tslint:disable-next-line:no-var-requires
 const TronWeb = require('tronweb');
 // tslint:disable-next-line:no-var-requires
-const cardanoCrypto = require('cardano-crypto.js');
 
 export interface Wallet {
 
@@ -217,15 +215,7 @@ export const generateLyraWallet = async (testnet: boolean, mnem: string): Promis
  * @returns wallet
  */
  export const generateAdaWallet = async (mnemonic: string): Promise<Wallet> => {
-    const derivationScheme = 1;
-    const walletSecret = await cardanoCrypto.mnemonicToRootKeypair(mnemonic, derivationScheme);
-    const xpub = ADA_DERIVATION_PATH
-                    .split('/')
-                    .slice(1)
-                    .map(index => index.slice(-1) === '\'' ? HARDENED_THRESHOLD + parseInt(index.slice(0, -1)) : parseInt(index))
-                    .reduce((secret, index) => cardanoCrypto.derivePrivate(secret, index, derivationScheme), walletSecret)
-                    .slice(64, 128)
-                    .toString('hex');
+    const xpub = await generateAdaKey(mnemonic, false)
     return { mnemonic, xpub };
 };
 

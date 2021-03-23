@@ -18,10 +18,11 @@ import {
     TESTNET_DERIVATION_PATH,
     TRON_DERIVATION_PATH,
     VET_DERIVATION_PATH,
+    ADA_DERIVATION_SCHEME,
 } from '../constants';
 import {Currency} from '../model';
 import {generateAddress} from './tron.crypto';
-import {generateAdaKey} from '../utils';
+import cardano from './cardano.crypto';
 // tslint:disable-next-line:no-var-requires
 const TronWeb = require('tronweb');
 const cardanoCrypto = require('cardano-crypto.js');
@@ -146,8 +147,7 @@ const generateLyraAddress = (testnet: boolean, xpub: string, i: number) => {
  * @returns blockchain address
  */
 const generateAdaAddress = (xpub: string, i: number) => {
-    const buf = Buffer.from(xpub, 'hex');
-    return cardanoCrypto.derivePublic(buf, i, 1).toString('hex');
+    return cardanoCrypto.derivePublic(Buffer.from(xpub, 'hex'), i, ADA_DERIVATION_SCHEME).toString('hex');
 };
 
 /**
@@ -279,10 +279,11 @@ const generateLyraPrivateKey = async (testnet: boolean, mnemonic: string, i: num
 /**
  * Generate Cardano private key from mnemonic seed
  * @param mnemonic mnemonic to generate private key from
+ * @param i derivation index of private key to generate.
  * @returns blockchain private key to the address
  */
-const generateAdaPrivateKey = async (mnemonic: string) => {
-    return generateAdaKey(mnemonic, true);
+const generateAdaPrivateKey = async (mnemonic: string, i: number) => {
+    return cardano.generatePrivateKey(mnemonic, i);
 };
 /**
  * Convert Bitcoin Private Key to Address
@@ -429,7 +430,7 @@ export const generatePrivateKeyFromMnemonic = (currency: Currency, testnet: bool
         case Currency.LYRA:
             return generateLyraPrivateKey(testnet, mnemonic, i);
         case Currency.ADA:
-            return generateAdaPrivateKey(mnemonic);
+            return generateAdaPrivateKey(mnemonic, i);
         default:
             throw new Error('Unsupported blockchain.');
     }

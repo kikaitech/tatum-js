@@ -24,10 +24,9 @@ import {
     VET_DERIVATION_PATH,
 } from '../constants';
 import {Currency} from '../model';
-import { generateAdaKey } from '../utils'
+import cardano from './cardano.crypto'
 // tslint:disable-next-line:no-var-requires
 const TronWeb = require('tronweb');
-// tslint:disable-next-line:no-var-requires
 
 export interface Wallet {
 
@@ -215,8 +214,7 @@ export const generateLyraWallet = async (testnet: boolean, mnem: string): Promis
  * @returns wallet
  */
  export const generateAdaWallet = async (mnemonic: string): Promise<Wallet> => {
-    const xpub = await generateAdaKey(mnemonic, false)
-    return { mnemonic, xpub };
+    return { mnemonic, xpub: await cardano.generatePublicKey(mnemonic) };
 };
 
 /**

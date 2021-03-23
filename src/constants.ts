@@ -9,6 +9,8 @@ export const VET_URL = 'https://sync-mainnet.vechain.org/';
 
 export const HARDENED_THRESHOLD = 0x80000000;
 
+export const ADA_DERIVATION_SCHEME = 1;
+
 export const ETH_DERIVATION_PATH = 'm/44\'/60\'/0\'/0';
 export const CELO_DERIVATION_PATH = 'm/44\'/52752\'/0\'/0';
 export const VET_DERIVATION_PATH = 'm/44\'/818\'/0\'/0';

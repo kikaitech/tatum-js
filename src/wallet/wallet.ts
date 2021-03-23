@@ -9,6 +9,7 @@ import hdkey from 'hdkey';
 import {RippleAPI} from 'ripple-lib';
 import {Keypair} from 'stellar-sdk';
 import {
+    HARDENED_THRESHOLD,
     BCH_DERIVATION_PATH,
     BTC_DERIVATION_PATH,
     CELO_DERIVATION_PATH,
@@ -21,11 +22,14 @@ import {
     LYRA_TEST_NETWORK,
     TESTNET_DERIVATION_PATH,
     TRON_DERIVATION_PATH,
-    VET_DERIVATION_PATH
+    VET_DERIVATION_PATH,
+    ADA_DERIVATION_PATH,
 } from '../constants';
 import {Currency} from '../model';
 // tslint:disable-next-line:no-var-requires
 const TronWeb = require('tronweb');
+// tslint:disable-next-line:no-var-requires
+const cardanoCrypto = require('cardano-crypto.js');
 
 export interface Wallet {
 
@@ -208,6 +212,24 @@ export const generateLyraWallet = async (testnet: boolean, mnem: string): Promis
 };
 
 /**
+ * Generate ADA wallet
+ * @param mnemonic mnemonic seed to use
+ * @returns wallet
+ */
+ export const generateAdaWallet = async (mnemonic: string): Promise<Wallet> => {
+    const derivationScheme = 1;
+    const walletSecret = await cardanoCrypto.mnemonicToRootKeypair(mnemonic, derivationScheme);
+    const xpub = ADA_DERIVATION_PATH
+                    .split('/')
+                    .slice(1)
+                    .map(index => index.slice(-1) === '\'' ? HARDENED_THRESHOLD + parseInt(index.slice(0, -1)) : parseInt(index))
+                    .reduce((secret, index) => cardanoCrypto.derivePrivate(secret, index, derivationScheme), walletSecret)
+                    .slice(64, 128)
+                    .toString('hex');
+    return { mnemonic, xpub };
+};
+
+/**
  * Generate wallet
  * @param currency blockchain to generate wallet for
  * @param testnet testnet or mainnet version of address
@@ -266,6 +288,8 @@ export const generateWallet = (currency: Currency, testnet: boolean, mnemonic?: 
             return generateBnbWallet(testnet);
         case Currency.LYRA:
             return generateLyraWallet(testnet, mnem);
+        case Currency.ADA:
+            return generateAdaWallet(mnem);
         default:
             throw new Error('Unsupported blockchain.');
     }

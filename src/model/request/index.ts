@@ -56,3 +56,4 @@ export * from './EthTransferErc721';
 export * from './SmartContractMethodInvocation';
 export * from './EthDeployErc721';
 export * from './CeloDeployErc721';
+export * from './TransferAda';

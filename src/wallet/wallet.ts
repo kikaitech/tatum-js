@@ -25,7 +25,8 @@ import {
     LYRA_TEST_NETWORK,
     TESTNET_DERIVATION_PATH,
     TRON_DERIVATION_PATH,
-    VET_DERIVATION_PATH
+    VET_DERIVATION_PATH,
+    XTZ_DERIVATION_PATH,
 } from '../constants';
 import {Currency} from '../model';
 import cardano from './cardano.crypto';
@@ -229,6 +230,20 @@ export const generateLyraWallet = async (testnet: boolean, mnem: string): Promis
  */
  export const generateAdaWallet = async (mnemonic: string): Promise<Wallet> => {
     return { mnemonic, xpub: await cardano.generateXPublicKey(mnemonic) };
+ }
+
+ /**
+ * Generate Xtz wallet
+ * @param mnem mnemonic seed to use
+ * @returns wallet
+ */
+ export const generateXtzWallet = async (mnem: string): Promise<Wallet> => {
+  const hdwallet = ethHdKey.fromMasterSeed(await mnemonicToSeed(mnem));
+  const derivePath = hdwallet.derivePath(XTZ_DERIVATION_PATH);
+  return {
+    xpub: derivePath.publicExtendedKey().toString(),
+    mnemonic: mnem
+  };
 };
 
 /**
@@ -294,6 +309,8 @@ export const generateWallet = (currency: Currency, testnet: boolean, mnemonic?: 
             return generateLyraWallet(testnet, mnem);
         case Currency.ADA:
             return generateAdaWallet(mnem);
+        case Currency.XTZ:
+            return generateXtzWallet(mnem);
         default:
             throw new Error('Unsupported blockchain.');
     }

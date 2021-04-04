@@ -33,6 +33,7 @@
     "@bitcoin-dot-com/bitcoincashjs2-lib": "^4.1.0",
     "@celo-tools/celo-ethers-wrapper": "0.0.5",
     "@cityofzion/neon-js": "^4.8.0",
+    "@emurgo/cardano-serialization-lib-nodejs": "^6.0.0",
     "axios": "^0.21.1",
     "axios-retry": "^3.1.9",
     "bignumber.js": "^9.0.0",

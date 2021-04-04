@@ -3,11 +3,17 @@ import CardanoWasm from '@emurgo/cardano-serialization-lib-nodejs';
 
 import { TransferAda } from '../model';
 
-export const sendADATransaction = async (body: TransferAda, graphQLUrl: string) => {
+/**
+ * Prepare a signed ADA transaction with the private key locally. Nothing is broadcasted to the blockchain.
+ * @param body content of the transaction to prepare.
+ * @param graphQLUrl a Cardano GraphQL URL to get UTxOs.
+ * @returns raw transaction data in hex, to be broadcasted to blockchain.
+ */
+export const prepareADATransaction = async (body: TransferAda, graphQLUrl: string) => {
   const fromAddress = CardanoWasm.Address.from_bech32(body.from);
   const toAddress = CardanoWasm.Address.from_bech32(body.to);
 
-  const fromUTxOs = (
+  const utxos = (
     await axios.post(graphQLUrl, {
       query: `{ utxos (where: {
           address: {
@@ -23,13 +29,10 @@ export const sendADATransaction = async (body: TransferAda, graphQLUrl: string) 
   ).data.data.utxos;
 
   let fromQuantity = 0;
-  for (const utxo of fromUTxOs) {
+  for (const utxo of utxos) {
     fromQuantity += parseInt(utxo.value);
   }
 
-  if (fromQuantity < body.amount) {
-    return { error: 'Insufficient fund' };
-  }
   const prvKey = CardanoWasm.Bip32PrivateKey.from_128_xprv(
       Buffer.from(body.privateKey, 'hex')
     ).to_raw_key();
@@ -43,15 +46,15 @@ export const sendADATransaction = async (body: TransferAda, graphQLUrl: string) 
     CardanoWasm.BigNum.from_str('500000000'),
     CardanoWasm.BigNum.from_str('2000000'),
   );
-  const { tip } = (
+  const { tip: { slotNo } } = (
     await axios.post(graphQLUrl, {
-      query: '{ cardano { tip { number slotNo epoch { number } }} }',
+      query: '{ cardano { tip { slotNo } } }',
     })
   ).data.data.cardano;
-  txBuilder.set_ttl(tip.slotNo + 200);
+  txBuilder.set_ttl(slotNo + 200);
 
   let total = 0;
-  for (const utxo of fromUTxOs) {
+  for (const utxo of utxos) {
     let amount = parseInt(utxo.value);
     if (total + amount > body.amount) {
       amount = body.amount - total;
@@ -93,6 +96,7 @@ export const sendADATransaction = async (body: TransferAda, graphQLUrl: string) 
   const witnesses = CardanoWasm.TransactionWitnessSet.new();
   witnesses.set_vkeys(vkeyWitnesses);
 
-  const transaction =  CardanoWasm.Transaction.new(txBody, witnesses);
-  return { transaction };
+  return Buffer.from(
+    CardanoWasm.Transaction.new(txBody, witnesses).to_bytes(),
+  ).toString('hex')
 };

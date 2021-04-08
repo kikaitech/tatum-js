@@ -1,32 +1,18 @@
 import axios from 'axios';
 import CardanoWasm from '@emurgo/cardano-serialization-lib-nodejs';
 
-import { TransferAda } from '../model';
+import { TransferAda, AdaUTxo } from '../model';
 
 /**
  * Prepare a signed ADA transaction with the private key locally. Nothing is broadcasted to the blockchain.
  * @param body content of the transaction to prepare.
- * @param graphQLUrl a Cardano GraphQL URL to get UTxOs.
+ * @param utxos array of unspend transaction output.
+ * @param slotNo a number of slot to calculate time-to-live of the transaction
  * @returns raw transaction data in hex, to be broadcasted to blockchain.
  */
-export const prepareADATransaction = async (body: TransferAda, graphQLUrl: string) => {
+export const prepareADATransaction = async (body: TransferAda, utxos: AdaUTxo[], slotNo: number) => {
   const fromAddress = CardanoWasm.Address.from_bech32(body.from);
   const toAddress = CardanoWasm.Address.from_bech32(body.to);
-
-  const utxos = (
-    await axios.post(graphQLUrl, {
-      query: `{ utxos (where: {
-          address: {
-            _eq: "${body.from}"
-          }
-        }) {
-          txHash
-          index
-          value
-        }
-      }`,
-    })
-  ).data.data.utxos;
 
   let fromQuantity = 0;
   for (const utxo of utxos) {
@@ -46,11 +32,6 @@ export const prepareADATransaction = async (body: TransferAda, graphQLUrl: strin
     CardanoWasm.BigNum.from_str('500000000'),
     CardanoWasm.BigNum.from_str('2000000'),
   );
-  const { tip: { slotNo } } = (
-    await axios.post(graphQLUrl, {
-      query: '{ cardano { tip { slotNo } } }',
-    })
-  ).data.data.cardano;
   txBuilder.set_ttl(slotNo + 200);
 
   let total = 0;

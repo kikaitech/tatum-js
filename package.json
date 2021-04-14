@@ -58,6 +58,7 @@
     "reflect-metadata": "^0.1.13",
     "ripple-lib": "^1.7.1",
     "stellar-sdk": "^8.1.0",
+    "sotez": "8.0.1",
     "thorify": "^1.5.2",
     "tronweb": "^3.2.2",
     "web3": "^1.2.9",

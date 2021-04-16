@@ -25,6 +25,7 @@ export const XTZ_DERIVATION_PATH = `m/44'/1729'/0'/0'`;
 // export const XTZ_DERIVATION_PATH = (accIndex: number) => {
 //     return `m/44'/1729'/${accIndex}'/0'`;
 // }
+export const XTZ_DEFAULT_FEE = 1420;
 
 export const ADA_DERIVATION_SCHEME = 2;
 

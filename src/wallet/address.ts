@@ -2,10 +2,10 @@ import {fromBase58, fromPublicKey, fromSeed} from 'bip32';
 import {mnemonicToSeed} from 'bip39';
 import {ECPair, networks, payments} from 'bitcoinjs-lib';
 import ethWallet, {hdkey as ethHdKey} from 'ethereumjs-wallet';
-import * as TaquitoUtils from "@taquito/utils";
+import { b58cencode, prefix } from "@taquito/utils";
 import { InMemorySigner } from "@taquito/signer";
-import * as Bip39 from "bip39";
-import * as Ed25519 from "ed25519-hd-key";
+import { mnemonicToSeedSync} from "bip39";
+import { derivePath } from "ed25519-hd-key";
 // @ts-ignore
 import {
     BCH_DERIVATION_PATH,
@@ -192,8 +192,8 @@ const generateLyraAddress = (testnet: boolean, xpub: string, i: number) => {
  * @returns blockchain address
  */
  const generateXtzAddress = async (xpub: string, i: number) => {
-    const buf = Buffer.from(xpub, 'hex');
-    const privateKey = await TaquitoUtils.b58cencode(buf.slice(0, 32), TaquitoUtils.prefix.edsk2);
+    const { key } = derivePath(`${XTZ_DERIVATION_PATH}/${i}'`, xpub);
+    const privateKey = await b58cencode(key, prefix.edsk2);
     const signer = await InMemorySigner.fromSecretKey(privateKey);
     return signer.publicKeyHash();
 };
@@ -419,13 +419,10 @@ const generateLyraPrivateKey = async (testnet: boolean, mnemonic: string, i: num
  * @returns blockchain private key to the address
  */
  const generateXtzPrivateKey = async (mnemonic: string, i: number): Promise<string> => {
-    const { xpub } = await generateXtzWallet(mnemonic);
-    const buf = Buffer.from(xpub, 'hex');
-    return TaquitoUtils.b58cencode(buf.slice(0, 32), TaquitoUtils.prefix.edsk2);
-    // const seed =  Bip39.mnemonicToSeedSync(mnemonic);
-    // const { key: dervdSeed } = Ed25519.derivePath(XTZ_DERIVATION_PATH(i), seed.toString("hex"));
-    // const privateKey = TaquitoUtils.b58cencode(dervdSeed.slice(0, 32), TaquitoUtils.prefix.edsk2);
-    // return privateKey;
+    const seed = mnemonicToSeedSync(mnemonic);
+    const { key } = derivePath(`${XTZ_DERIVATION_PATH}/${i}'`, seed.toString('hex'));
+    const privateKey = await b58cencode(key, prefix.edsk2);
+    return privateKey;
 };
 
 

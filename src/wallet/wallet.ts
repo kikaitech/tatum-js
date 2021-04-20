@@ -5,10 +5,7 @@ import {bip32, networks} from 'bitcoinjs-lib';
 // @ts-ignore
 import {Networks} from 'bitcore-lib-doge';
 import {hdkey as ethHdKey} from 'ethereumjs-wallet';
-import * as Ed25519 from "ed25519-hd-key";
-import * as Bip39 from 'bip39';
-import * as TaquitoUtils from "@taquito/utils";
-import { InMemorySigner } from "@taquito/signer";
+import { mnemonicToSeedSync } from 'bip39';
 // @ts-ignore
 import hdkey from 'hdkey';
 import {RippleAPI} from 'ripple-lib';
@@ -30,7 +27,6 @@ import {
     TESTNET_DERIVATION_PATH,
     TRON_DERIVATION_PATH,
     VET_DERIVATION_PATH,
-    XTZ_DERIVATION_PATH,
 } from '../constants';
 import {Currency} from '../model';
 import cardano from './cardano.crypto';
@@ -242,15 +238,8 @@ export const generateLyraWallet = async (testnet: boolean, mnem: string): Promis
  * @returns wallet
  */
  export const generateXtzWallet = async (mnem: string): Promise<Wallet> => {
-    const seed =  Bip39.mnemonicToSeedSync(mnem);
-    const { key } = Ed25519.derivePath(XTZ_DERIVATION_PATH, seed.toString('hex'));
-    return { xpub: key.toString('hex'), mnemonic: mnem };
-//   const hdwallet = ethHdKey.fromMasterSeed(await mnemonicToSeed(mnem));
-//   const derivePath = hdwallet.derivePath(XTZ_DERIVATION_PATH);
-//   return {
-//     xpub: derivePath.publicExtendedKey().toString(),
-//     mnemonic: mnem
-//   };
+    const seed = mnemonicToSeedSync(mnem);
+    return { xpub: seed.toString('hex'), mnemonic: mnem };
 };
 
 /**

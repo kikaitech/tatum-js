@@ -11,5 +11,5 @@ export class TransferXtz {
     @IsInt()
     @IsNotEmpty()
     @Min(1)
-    public amount: number; // lovelace
+    public amount: number; // mutez
 }
